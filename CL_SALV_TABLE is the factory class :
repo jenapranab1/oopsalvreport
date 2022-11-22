@@ -1,4 +1,5 @@
 CL_SALV_TABLE is the factory class :
+1st :
 First, we define a global structure to store the data we are going to show in the ALV.
 types: begin of ty_material,
          matnr type matnr,
@@ -7,6 +8,7 @@ types: begin of ty_material,
 
 data: g_matnr     like mara-matnr,
       gt_material type standard table of ty_material.
+2nd Point : 
 Second step. We define a ‘handler’ class whose purpose is to control the double click event. In the class definition, we code the signature of the event double click and, in the implementation, we code the action or process that we want to happen when the event is raised.
 class cl_handler definition.
   public section.
@@ -48,4 +50,4 @@ In this case, we will execute transaction ‘MM03’ and we will send the materi
 Then we verify that the material exists seeking it at table ‘MARA’. MARA is a standard table that stores the materials data.
 If the material exists then the next step is to load the transaction settings in memory and finally execute it.
 Otherwise, we show a message in the screen to indicate that material doesn’t exist.
-3rd
+3rd Point :
