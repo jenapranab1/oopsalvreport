@@ -1,0 +1,110 @@
+REPORT  zsl_oop_alv.
+*----------------------------------------------------------------------*
+*       CLASS lcl_sflight DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_sflight DEFINITION.
+
+  PUBLIC SECTION.
+    TYPES: BEGIN OF lty_sflight,
+           carrid	         TYPE s_carr_id,
+           connid	         TYPE s_conn_id,
+           fldate	         TYPE s_date,
+           price           TYPE s_price,
+           currency	       TYPE s_currcode,
+           planetype       TYPE s_planetye,
+           seatsmax	       TYPE s_seatsmax,
+           seatsocc	       TYPE s_seatsocc,
+           END OF lty_sflight.
+
+    METHODS: get_sflight_data,
+             build_fieldcatlog,
+             display_alv.
+
+    DATA: gt_sflight  TYPE STANDARD TABLE OF lty_sflight,
+          gt_fcat     TYPE lvc_t_fcat.
+
+ENDCLASS.                    "lcl_sflight DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_sflight IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_sflight IMPLEMENTATION.
+
+* Get SFLIGHT data
+  METHOD get_sflight_data.
+    SELECT carrid connid fldate price currency planetype seatsmax
+           seatsocc INTO TABLE me->gt_sflight
+                    FROM sflight
+                    WHERE carrid = 'AA'.
+  ENDMETHOD.                    "get_sflight_data
+
+* Build FieldCatlog
+  METHOD build_fieldcatlog.
+    CALL FUNCTION 'LVC_FIELDCATALOG_MERGE'
+      EXPORTING
+        i_structure_name       = 'SFLIGHT'
+      CHANGING
+        ct_fieldcat            = gt_fcat
+      EXCEPTIONS
+        inconsistent_interface = 1
+        program_error          = 2
+        OTHERS                 = 3.
+    IF sy-subrc <> 0.
+      MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+              WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+    ENDIF.
+  ENDMETHOD.                    "build_fieldcatlog
+
+* Display ALV
+  METHOD display_alv.
+    CALL SCREEN 100.
+  ENDMETHOD.                    "display
+ENDCLASS.                    "lcl_sflight IMPLEMENTATION
+
+
+START-OF-SELECTION.
+
+  DATA: lo_sflight        TYPE REF TO lcl_sflight,
+        lo_container_100  TYPE REF TO cl_gui_custom_container,
+        lo_grid           TYPE REF TO cl_gui_alv_grid.
+
+* Create instance for the local class
+  CREATE OBJECT lo_sflight.
+
+* Get the SFLIGHT table data
+  lo_sflight->get_sflight_data( ).
+
+* 1. Create container instance
+  CREATE OBJECT lo_container_100
+    EXPORTING
+      container_name = 'ALV'.
+
+* 2. Create ALV grid instance by using the container instance
+  CREATE OBJECT lo_grid
+    EXPORTING
+      i_parent = lo_container_100.
+
+* 3. Build Field Catlog
+  lo_sflight->build_fieldcatlog( ).
+
+* 4. Call the ALV
+  CALL METHOD lo_grid->set_table_for_first_display
+    CHANGING
+      it_outtab                     = lo_sflight->gt_sflight
+      it_fieldcatalog               = lo_sflight->gt_fcat
+    EXCEPTIONS
+      invalid_parameter_combination = 1
+      program_error                 = 2
+      too_many_lines                = 3
+      OTHERS                        = 4.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+
+* Display the ALV
+  lo_sflight->display_alv( ).
