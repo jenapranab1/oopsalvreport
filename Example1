@@ -59,11 +59,11 @@ CLASS lcl_sflight IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.                    "build_fieldcatlog
 
-* Display ALV
+* Display ALV                   " here ALV is MMP's Custom Ctrl Screen feild Attribute 
   METHOD display_alv.
-    CALL SCREEN 100.
+    CALL SCREEN 100.            " Create Screen & PBO with Set Pf Status & IN PAI Sy-ucom .
   ENDMETHOD.                    "display
-ENDCLASS.                    "lcl_sflight IMPLEMENTATION
+ENDCLASS.                      "lcl_sflight IMPLEMENTATION
 
 
 START-OF-SELECTION.
@@ -81,15 +81,15 @@ START-OF-SELECTION.
 * 1. Create container instance
   CREATE OBJECT lo_container_100
     EXPORTING
-      container_name = 'ALV'.
+      container_name = 'ALV'.            " here ALV is MMP's Custom Ctrl Screen feild Attribute , Assign here into container .
 
 * 2. Create ALV grid instance by using the container instance
   CREATE OBJECT lo_grid
     EXPORTING
-      i_parent = lo_container_100.
+      i_parent = lo_container_100.      " here lo_container_100 Assign here into lo_grid  .
 
 * 3. Build Field Catlog
-  lo_sflight->build_fieldcatlog( ).
+  lo_sflight->build_fieldcatlog( ). 
 
 * 4. Call the ALV
   CALL METHOD lo_grid->set_table_for_first_display
