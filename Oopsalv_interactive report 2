@@ -1,0 +1,117 @@
+REPORT ZDEMO_REPO_OOPS.
+PARAMETERS: p_matnr TYPE mara-matnr.
+TYPES: BEGIN OF type_mara,
+        matnr TYPE mara-matnr,
+        ersda TYPE mara-ersda,
+        ernam TYPE mara-ernam,
+      END OF type_mara.
+DATA: t_mara TYPE STANDARD TABLE OF type_mara,
+      w_mara TYPE type_mara.
+data: o_salv TYPE REF TO CL_SALV_TABLE.
+DATA: lr_cols TYPE REF TO CL_SALV_COLUMNs_TABLE,
+      lr_col  TYPE REF TO CL_SALV_COLUMN_TABLE.
+
+class lcl_event DEFINITION DEFERRED.
+DATA: GR_EVENTS TYPE REF TO lcl_event.
+START-OF-SELECTION.
+select matnr
+       ersda
+       ernam
+FROM mara
+INTO TABLE t_mara
+WHERE matnr = p_matnr.
+  IF sy-subrc eq 0.
+    sort t_mara by matnr.
+    PERFORM f_display_table.
+  ENDIF.
+  class lcl_event DEFINITION.
+    PUBLIC SECTION.
+    methods: event_handle for EVENT double_click of CL_SALV_EVENTS_TABLE
+                          IMPORTING row column."col.
+  ENDCLASS.
+*&---------------------------------------------------------------------*
+*&      Form  F_DISPLAY_TABLE
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM f_display_table .
+ CALL METHOD cl_salv_table=>factory
+   IMPORTING
+     r_salv_table   = o_salv
+   CHANGING
+     t_table        = t_mara
+     .
+* Set Hotspot
+ PERFORM f_set_hotspot.
+* *Register events
+ PERFORM f_regis_event.
+
+o_salv->display( ).
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  F_SET_HOTSPOT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM f_set_hotspot .
+CALL METHOD o_salv->get_columns
+  RECEIVING
+    value  = lr_cols
+    .
+ LR_COL ?= LR_COLS->GET_COLUMN( 'MATNR' ).
+ CALL METHOD lr_col->set_cell_type
+   EXPORTING
+     value  = IF_SALV_C_CELL_TYPE=>hotspot
+     .
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*&       Class (Implementation)  lcl_event
+*&---------------------------------------------------------------------*
+*        Text
+*----------------------------------------------------------------------*
+CLASS lcl_event IMPLEMENTATION.
+METHOD event_handle.
+  READ TABLE t_mara INTO w_mara INDEX row.
+  IF sy-subrc eq 0.
+     set PARAMETER ID 'MAT' FIELD w_mara-matnr.
+     CALL TRANSACTION 'MM03' AND SKIP FIRST SCREEN.
+  ENDIF.
+ENDMETHOD.
+ENDCLASS.               "lcl_event
+*&---------------------------------------------------------------------*
+*&      Form  F_REGIS_EVENT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM f_regis_event .
+DATA: LR_EVENTS TYPE REF TO CL_SALV_EVENTS_TABLE.
+LR_EVENTS = o_sALV->GET_EVENT( ). "get event
+CREATE OBJECT GR_EVENTS.
+*SET HANDLER GR_EVENTS->double_click FOR LR_EVENTS. "register event handler method
+SET HANDLER GR_EVENTS->event_handle FOR LR_EVENTS. "register event handler method
+
+
+*set standard ALV functions visible
+*This method will give all pf staus on application bar which will be not visible
+* on screen after using Factory method
+*TRY.
+CALL METHOD o_salv->set_screen_status
+  EXPORTING
+    report        =  'SALV_TEST_FUNCTIONS'
+    pfstatus      =  'SALV_STANDARD'
+    set_functions = o_salv->c_functions_all
+    .
+*ENDTRY.
+
+ENDFORM.
