@@ -23,14 +23,13 @@ TYPES : BEGIN OF TY_VBAK.
 TYPES  END OF TY_VBAK.
 DATA : IT_VBAK TYPE TABLE OF TY_VBAK,
        WA_VBAK TYPE TY_VBAK.
+------------------------------------------------------------------------------------------------------------------------------
 
 CLASS LCL_EVENTRECEIVER DEFINITION.
       PUBLIC SECTION.
          METHODS HANDLE_DOUBLE_CLICK FOR EVENT DOUBLE_CLICK OF CL_GUI_ALV_GRID IMPORTING E_ROW E_COLUMN.
-        
 ENDCLASS.
-
-
+------------------------------------------------------------------------------------------------------------------------------
 CLASS LCL_EVENTRECEIVER IMPLEMENTATION.
        METHOD HANDLE_DOUBLE_CLICK.
          CASE E_COLUMN-FIELDNAME.
@@ -51,6 +50,8 @@ CLASS LCL_EVENTRECEIVER IMPLEMENTATION.
              MESSAGE ' PLEASE CLICK ON CUSTOMER NO ONLY' TYPE 'I'.
          ENDCASE.
         ENDMETHOD.
+  ENDCLASS.   
+  ------------------------------------------------------------------------------------------------------------------------------
 
 FORM GETVBAK .
       REFRESH IT_VBAK.
@@ -70,12 +71,13 @@ FORM GETVBAK .
           ENDLOOP.
           ENDIF.
 ENDFORM.   
-
+------------------------------------------------------------------------------------------------------------------------------
 
 DATA OB1 TYPE REF TO LCL_EVENTRECEIVER.
-
+------------------------------------------------------------------------------------------------------------------------------
 START-OF-SELECTION.
 CALL SCREEN 100.
+------------------------------------------------------------------------------------------------------------------------------
 MODULE STATUS_0100 OUTPUT.
   IF OB1_CONT IS NOT BOUND.
   SET PF-STATUS 'STATUS100'.
@@ -100,23 +102,26 @@ MODULE STATUS_0100 OUTPUT.
 
  ENDIF.
 ENDMODULE.                 " STATUS_0100  OUTPUT
+------------------------------------------------------------------------------------------------------------------------------
 MODULE USER_COMMAND_0100 INPUT.
     CASE SY-UCOMM.
         WHEN 'BACK'.
             LEAVE PROGRAM.
     ENDCASE.
 ENDMODULE.                 " USER_COMMAND_0100  INPUT
+------------------------------------------------------------------------------------------------------------------------------
 FORM GETKNA1 .
      SELECT KUNNR NAME1 LAND1
         FROM KNA1
           INTO TABLE IT_KNA1
             WHERE KUNNR IN CUST_NO.
 ENDFORM.                    " GETKNA1
-
+------------------------------------------------------------------------------------------------------------------------------
 FORM REGISTERHANDLER .
       CREATE OBJECT OB1.
       SET HANDLER OB1->HANDLE_DOUBLE_CLICK FOR OB1_GRID.
 ENDFORM.
+------------------------------------------------------------------------------------------------------------------------------
 FORM DISPLAYKNA1 .
       CALL METHOD OB1_GRID->SET_TABLE_FOR_FIRST_DISPLAY
         EXPORTING
@@ -126,6 +131,7 @@ FORM DISPLAYKNA1 .
 
 ENDFORM.                     " DISPLAYKNA1
                     " REGISTERHANDLER
+ ------------------------------------------------------------------------------------------------------------------------------                   
 FORM GETVBAK .
       REFRESH IT_VBAK.
         SELECT VBELN ERDAT ERZET ERNAM NETWR
@@ -144,6 +150,7 @@ FORM GETVBAK .
           ENDLOOP.
           ENDIF.
 ENDFORM.                    " GETVBAK
+------------------------------------------------------------------------------------------------------------------------------
 MODULE STATUS_0200 OUTPUT.
   IF OB2_CONT IS NOT BOUND.
   SET PF-STATUS 'STATUS200'.
@@ -165,12 +172,14 @@ MODULE STATUS_0200 OUTPUT.
 ENDIF.
 
 ENDMODULE.                 " STATUS_0200  OUTPUT
+------------------------------------------------------------------------------------------------------------------------------
 MODULE USER_COMMAND_0200 INPUT.
     CASE SY-UCOMM.
        WHEN 'BACK'.
          LEAVE TO SCREEN 100.
      ENDCASE.
 ENDMODULE.                 " USER_COMMAND_0200  INPUT
+------------------------------------------------------------------------------------------------------------------------------
 FORM DISPLAYVBAK .
      CALL METHOD OB2_GRID->SET_TABLE_FOR_FIRST_DISPLAY
      EXPORTING
