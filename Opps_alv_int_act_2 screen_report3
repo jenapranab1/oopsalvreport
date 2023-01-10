@@ -28,7 +28,11 @@ TYPES  END OF TY_VBAK.
 DATA : IT_VBAK TYPE TABLE OF TY_VBAK,
        WA_VBAK TYPE TY_VBAK.
 "------------------------------------------------------------------------------------------------------------------------------
+DATA WA_LAYO TYPE LVC_S_LAYO.
 
+DATA : IT_FCAT TYPE LVC_T_FCAT,
+       WA_FCAT TYPE LVC_S_FCAT.
+"----------------------------------------------------------------------------------------------------------------------------------------------------
 CLASS LCL_EVENTRECEIVER DEFINITION.
       PUBLIC SECTION.
          METHODS HANDLE_DOUBLE_CLICK FOR EVENT DOUBLE_CLICK OF CL_GUI_ALV_GRID IMPORTING E_ROW E_COLUMN. 
@@ -36,7 +40,7 @@ CLASS LCL_EVENTRECEIVER DEFINITION.
 ENDCLASS.
 "------------------------------------------------------------------------------------------------------------------------------
 CLASS LCL_EVENTRECEIVER IMPLEMENTATION.
-       METHOD HANDLE_DOUBLE_CLICK.
+       METHOD HANDLE_DOUBLE_CLICK.     " HANDLE_DOUBLE_CLICK is Method  
          CASE E_COLUMN-FIELDNAME.
            WHEN 'KUNNR'.
 *            MESSAGE 'DOUBLE CLICKED ON CUSTOMER NO' TYPE 'I'. "EVENT DOUBLE_CLICK IS TRIGEERED.
@@ -57,7 +61,6 @@ CLASS LCL_EVENTRECEIVER IMPLEMENTATION.
         ENDMETHOD.
   ENDCLASS.   
   "------------------------------------------------------------------------------------------------------------------------------
-
 FORM GETVBAK .
       REFRESH IT_VBAK.
         SELECT VBELN ERDAT ERZET ERNAM NETWR
@@ -194,3 +197,22 @@ FORM DISPLAYVBAK .
 *         IT_FIELDCATALOG               = IT_FCAT.
 
 ENDFORM.                    " DISPLAYVBAK
+"----------------------------------------------------------------------------------------------------------------------------------------------------------
+FORM FLDCATVBAK .
+* CALL FUNCTION MODULE
+     CALL FUNCTION 'LVC_FIELDCATALOG_MERGE'
+      EXPORTING
+
+        I_STRUCTURE_NAME             =  'ZROHITVBAK'
+       CHANGING
+         CT_FIELDCAT                  = IT_FCAT.
+        IF IT_FCAT IS NOT INITIAL.
+        CLEAR WA_FCAT.
+          WA_FCAT-FIELDNAME = 'NETWR'.
+          WA_FCAT-COL_POS = 5.
+          WA_FCAT-COLTEXT = 'NET VALUE'.
+          WA_FCAT-OUTPUTLEN = 20.
+         APPEND WA_FCAT TO IT_FCAT .
+        ENDIF.
+ENDFORM.                    
+
