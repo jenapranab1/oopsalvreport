@@ -10,9 +10,8 @@ SELECT-OPTIONS CUST_NO FOR V_KUNNR DEFAULT '1000' TO '1030'.
 DATA : OB1_CONT TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
        OB1_GRID TYPE REF TO CL_GUI_ALV_GRID,
        OB2_CONT TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
-       OB2_GRID TYPE REF TO CL_GUI_ALV_GRID,
-       OB3_CONT TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
-       OB3_GRID TYPE REF TO CL_GUI_ALV_GRID.
+       OB2_GRID TYPE REF TO CL_GUI_ALV_GRID.
+      
 "--------------------------------------------------------------------------------------------------------------------------------------------
 TYPES : BEGIN  OF TY_KNA1.
          INCLUDE TYPE ZROHITKNA1.
