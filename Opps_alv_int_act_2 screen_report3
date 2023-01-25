@@ -84,6 +84,7 @@ DATA OB1 TYPE REF TO LCL_EVENTRECEIVER.
 "------------------------------------------------------------------------------------------------------------------------------
 START-OF-SELECTION.
 CALL SCREEN 100.
+
 MODULE STATUS_0100 OUTPUT.
   IF OB1_CONT IS NOT BOUND.
   SET PF-STATUS 'STATUS100'.
@@ -95,19 +96,41 @@ MODULE STATUS_0100 OUTPUT.
     CREATE OBJECT OB1_GRID
       EXPORTING
         I_PARENT          =  OB1_CONT.
+        ENDIF.
+ ENDMODULE.                 " STATUS_0100  OUTPUT
+ 
 * CUSTOMER DATA RETRIEVAL
     PERFORM GETKNA1.
+    "------------------------------------------------------------------------------------------------------------------------------
+    FORM GETKNA1 .
+     SELECT KUNNR NAME1 LAND1
+        FROM KNA1
+          INTO TABLE IT_KNA1
+            WHERE KUNNR IN CUST_NO.
+    ENDFORM.                    " GETKNA1
+   "------------------------------------------------------------------------------------------------------------------------------
 
    IF IT_KNA1 IS NOT INITIAL.
+   
 * REGISTER HANDLER FOR DOUBLE CLICK ON CUSTOMER DATA GRID.
    PERFORM REGISTERHANDLER.
+   FORM REGISTERHANDLER .
+      CREATE OBJECT OB1.
+      SET HANDLER OB1->HANDLE_DOUBLE_CLICK FOR OB1_GRID.
+    ENDFORM.                  " REGISTERHANDLER
 
 * DISPLAY DATA KNA1.
      PERFORM DISPLAYKNA1.
+     "------------------------------------------------------------------------------------------------------------------------------
+    FORM DISPLAYKNA1 .
+      CALL METHOD OB1_GRID->SET_TABLE_FOR_FIRST_DISPLAY
+        EXPORTING
+            I_STRUCTURE_NAME            =  'ZROHITKNA1'
+        CHANGING
+          IT_OUTTAB                     =   IT_KNA1.
+     ENDFORM.                             " DISPLAYKNA1
+     
    ENDIF.
-
- ENDIF.
-ENDMODULE.                 " STATUS_0100  OUTPUT
 "------------------------------------------------------------------------------------------------------------------------------
 MODULE USER_COMMAND_0100 INPUT.
     CASE SY-UCOMM.
@@ -115,28 +138,8 @@ MODULE USER_COMMAND_0100 INPUT.
             LEAVE PROGRAM.
     ENDCASE.
 ENDMODULE.                 " USER_COMMAND_0100  INPUT
-"------------------------------------------------------------------------------------------------------------------------------
-FORM GETKNA1 .
-     SELECT KUNNR NAME1 LAND1
-        FROM KNA1
-          INTO TABLE IT_KNA1
-            WHERE KUNNR IN CUST_NO.
-ENDFORM.                    " GETKNA1
-"------------------------------------------------------------------------------------------------------------------------------
-FORM REGISTERHANDLER .
-      CREATE OBJECT OB1.
-      SET HANDLER OB1->HANDLE_DOUBLE_CLICK FOR OB1_GRID.
-ENDFORM.
-"------------------------------------------------------------------------------------------------------------------------------
-FORM DISPLAYKNA1 .
-      CALL METHOD OB1_GRID->SET_TABLE_FOR_FIRST_DISPLAY
-        EXPORTING
-            I_STRUCTURE_NAME            =  'ZROHITKNA1'
-        CHANGING
-          IT_OUTTAB                     =   IT_KNA1.
 
-ENDFORM.                     " DISPLAYKNA1
-                    " REGISTERHANDLER
+
 "------------------------------------------------------------------------------------------------------------------------------------                   
 FORM GETVBAK .
       REFRESH IT_VBAK.
