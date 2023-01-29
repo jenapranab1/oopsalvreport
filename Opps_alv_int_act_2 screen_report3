@@ -5,10 +5,11 @@ REPORT ZPRG_OOPS_ALVREPORT2.
 
 DATA V_KUNNR TYPE KNA1-KUNNR.
 
-SELECT-OPTIONS CUST_NO FOR V_KUNNR DEFAULT '1000' TO '1030'.
+SELECT-OPTIONS   CUST_NO FOR V_KUNNR DEFAULT '1000' TO '1030'.
 
 DATA : OB1_CONT TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
        OB1_GRID TYPE REF TO CL_GUI_ALV_GRID,
+       
        OB2_CONT TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
        OB2_GRID TYPE REF TO CL_GUI_ALV_GRID.
       
@@ -28,31 +29,35 @@ DATA : IT_VBAK TYPE TABLE OF TY_VBAK,
        WA_VBAK TYPE TY_VBAK.
 "------------------------------------------------------------------------------------------------------------------------------
 DATA WA_LAYO TYPE LVC_S_LAYO.
-
+"-------------------------------------------------------------------------------------------------------------------------------
 DATA : IT_FCAT TYPE LVC_T_FCAT,
        WA_FCAT TYPE LVC_S_FCAT.
 "----------------------------------------------------------------------------------------------------------------------------------------------------     
 DATA OB1 TYPE REF TO LCL_EVENTRECEIVER.
 "----------------------------------------------------------------------------------------------------------------------------------------------------
-CLASS LCL_EVENTRECEIVER DEFINITION.
+CLASS LCL_EVENTRECEIVER DEFINITION. [7 ]
       PUBLIC SECTION.
-         METHODS HANDLE_DOUBLE_CLICK FOR EVENT DOUBLE_CLICK OF CL_GUI_ALV_GRID IMPORTING E_ROW E_COLUMN. 
-         " HANDLE_DOUBLE_CLICK is Method  , DOUBLE_CLICK is For Event , class --> CL_GUI_ALV_GRID 
+         METHODS [HANDLE_DOUBLE_CLICK]  FOR EVENT [DOUBLE_CLICK] OF [ CL_GUI_ALV_GRID ]  IMPORTING [ E_ROW E_COLUMN ]. 
+        [  " HANDLE_DOUBLE_CLICK is Method  , DOUBLE_CLICK is For Event , class --> CL_GUI_ALV_GRID  ]
 ENDCLASS.
 "------------------------------------------------------------------------------------------------------------------------------
-CLASS LCL_EVENTRECEIVER IMPLEMENTATION.
+CLASS LCL_EVENTRECEIVER IMPLEMENTATION.  [ 8 ]
        METHOD HANDLE_DOUBLE_CLICK.     " HANDLE_DOUBLE_CLICK is Method  
-         CASE E_COLUMN-FIELDNAME.
-           WHEN 'KUNNR'.
-*            MESSAGE 'DOUBLE CLICKED ON CUSTOMER NO' TYPE 'I'. "EVENT DOUBLE_CLICK IS TRIGEERED.
-* GET SELECTED CUSTOMER NO.
+            CASE E_COLUMN-FIELDNAME.
+             WHEN 'KUNNR'.
+                  *   MESSAGE 'DOUBLE CLICKED ON CUSTOMER NO' TYPE 'I'. "EVENT DOUBLE_CLICK IS TRIGEERED.
+
+* GET SELECTED CUSTOMER NO.  [ 9 ] 
            READ TABLE IT_KNA1 INTO WA_KNA1 INDEX E_ROW-INDEX TRANSPORTING KUNNR.
            IF SY-SUBRC EQ 0.
-* GET CORRESPONDING SALES ORDER DATA FOR SELECTED CUSTOMER NO.
+           
+* GET CORRESPONDING SALES ORDER DATA FOR SELECTED CUSTOMER NO. 
 *2nd screen 
-           PERFORM GETVBAK. 
+           PERFORM GETVBAK. [10 ] --> Select statement writen below 
+           
           IF IT_FINAL_VBAK IS NOT INITIAL.
-              CALL SCREEN 200.
+              
+          CALL SCREEN 200. [ 11 ]----> PBO & PAI WRIITEN BELOW 
            ELSE.
               MESSAGE ' NO SALES ORDER DATA AVAILABLE FOR SELECTED CUSTOMER' TYPE 'I'.
           ENDIF.
@@ -63,52 +68,55 @@ CLASS LCL_EVENTRECEIVER IMPLEMENTATION.
         ENDMETHOD.
   ENDCLASS.   
 "------------------------------------------------------------------------------------------------------------------------------
-START-OF-SELECTION.
+START-OF-SELECTION. [ 1 ] 
 CALL SCREEN 100.
 
 MODULE STATUS_0100 OUTPUT.
   IF OB1_CONT IS NOT BOUND.
-  SET PF-STATUS 'STATUS100'.
+  SET PF-STATUS 'STATUS100'. 
   
-* LINK CUSTOM CONTROL WITH CUSTOM CONTAINER.
+  MODULE USER_COMMAND_0100 INPUT. [ 2 ] 
+    CASE SY-UCOMM.
+        WHEN 'BACK'.
+            LEAVE PROGRAM.
+    ENDCASE.
+ENDMODULE.                 " USER_COMMAND_0100  INPUT
+  
+* LINK CUSTOM CONTROL WITH CUSTOM CONTAINER. [3]
   CREATE OBJECT OB1_CONT
     EXPORTING
       CONTAINER_NAME              =  'CUSTCTRL1'.
       
-* LINK ALV GRID WITH CUSTOM CONTAINER.
+* LINK ALV GRID WITH CUSTOM CONTAINER.  [4]
     CREATE OBJECT OB1_GRID
       EXPORTING
         I_PARENT          =  OB1_CONT.
         ENDIF.
  ENDMODULE.                 " STATUS_0100  OUTPUT
 "------------------------------------------------------------------------------------------------------------------------------
-* CUSTOMER DATA RETRIEVAL
+* CUSTOMER DATA RETRIEVAL      [5] 
     PERFORM GETKNA1.
-   
     FORM GETKNA1 .
      SELECT KUNNR NAME1 LAND1
         FROM KNA1
           INTO TABLE IT_KNA1
             WHERE KUNNR IN CUST_NO.
     ENDFORM.                    " GETKNA1
+    
+     IF IT_KNA1 IS NOT INITIAL.
 "------------------------------------------------------------------------------------------------------------------------------
-
-   IF IT_KNA1 IS NOT INITIAL.
-   
-* REGISTER HANDLER FOR DOUBLE CLICK ON CUSTOMER DATA GRID.
-* DATA OB1 TYPE REF TO LCL_EVENTRECEIVER (already declareed )
-   PERFORM REGISTERHANDLER.
-                            
+* REGISTER HANDLER FOR DOUBLE CLICK ON CUSTOMER DATA GRID. [  * DATA OB1 TYPE REF TO LCL_EVENTRECEIVER (already declareed ) ] 
+ 
+   PERFORM REGISTERHANDLER.                        
    FORM REGISTERHANDLER .
       CREATE OBJECT OB1.
       SET HANDLER OB1->HANDLE_DOUBLE_CLICK FOR OB1_GRID.
     ENDFORM.                  " REGISTERHANDLER
 *---------------------------------------------------------------------------------------------------------------------------------
-* DISPLAY DATA KNA1.
+* DISPLAY DATA KNA1.  [ 6 ]
      PERFORM DISPLAYKNA1.
-     
-    FORM DISPLAYKNA1 .
-      CALL METHOD OB1_GRID->SET_TABLE_FOR_FIRST_DISPLAY
+     FORM DISPLAYKNA1 .
+     CALL METHOD OB1_GRID->SET_TABLE_FOR_FIRST_DISPLAY
         EXPORTING
             I_STRUCTURE_NAME            =  'ZROHITKNA1'
         CHANGING
@@ -116,23 +124,20 @@ MODULE STATUS_0100 OUTPUT.
      ENDFORM.                             " DISPLAYKNA1
      
    ENDIF.
-"------------------------------------------------------------------------------------------------------------------------------
-MODULE USER_COMMAND_0100 INPUT.
-    CASE SY-UCOMM.
-        WHEN 'BACK'.
-            LEAVE PROGRAM.
-    ENDCASE.
-ENDMODULE.                 " USER_COMMAND_0100  INPUT
 "------------------------------------------------------------------------------------------------------------------------------------  
-*For 2nd Screen VBAK .
-                 
-FORM GETVBAK .
+*For 2nd Screen VBAK .  [ 10 ]          
+ FORM GETVBAK .
+      
       REFRESH IT_VBAK.
-        SELECT VBELN ERDAT ERZET ERNAM NETWR
+         
+         SELECT VBELN ERDAT ERZET ERNAM NETWR
            FROM VBAK INTO TABLE IT_VBAK
              WHERE KUNNR = WA_KNA1-KUNNR.
+             
           IF SY-SUBRC EQ 0.
-         REFRESH IT_FINAL_VBAK.
+        
+        REFRESH IT_FINAL_VBAK.
+          
           LOOP AT IT_VBAK INTO WA_VBAK.
             CLEAR WA_FINAL_VBAK.
           WA_FINAL_VBAK-VBELN = WA_VBAK-VBELN.
@@ -145,41 +150,35 @@ FORM GETVBAK .
           ENDIF.
 ENDFORM.                    " GETVBAK
 "------------------------------------------------------------------------------------------------------------------------------
-MODULE STATUS_0200 OUTPUT.
+MODULE STATUS_0200 OUTPUT.  [11 ]
   IF OB2_CONT IS NOT BOUND.
   SET PF-STATUS 'STATUS200'.
   
-* LINK CONTAINER WITH CUSTOM CONTROL
+* LINK CONTAINER WITH CUSTOM CONTROL  [ 12 ] 
      CREATE OBJECT OB2_CONT
        EXPORTING
          CONTAINER_NAME              = 'CUSTCTRL2'.
          
-* LINK CONTAINER WITH GRID.
+* LINK CONTAINER WITH GRID.   [13 ]
       CREATE OBJECT OB2_GRID
         EXPORTING
          I_PARENT          =  OB2_CONT.
          
 * display the sales order data
-         PERFORM DISPLAYVBAK.
+         PERFORM DISPLAYVBAK.   [ 14 ] 
       ELSE.
-      
-* cell styling
-         PERFORM CELLSTYLING.
-         
-* REDISPLAY THE TABLE.
-         CALL METHOD OB2_GRID->REFRESH_TABLE_DISPLAY.
 ENDIF.
 
 ENDMODULE.                 " STATUS_0200  OUTPUT
 "------------------------------------------------------------------------------------------------------------------------------
-MODULE USER_COMMAND_0200 INPUT.
+MODULE USER_COMMAND_0200 INPUT. [11 ]
     CASE SY-UCOMM.
        WHEN 'BACK'.
          LEAVE TO SCREEN 100.
      ENDCASE.
 ENDMODULE.                 " USER_COMMAND_0200  INPUT
 "------------------------------------------------------------------------------------------------------------------------------
-FORM DISPLAYVBAK .
+FORM DISPLAYVBAK . [ 14 ] 
      CALL METHOD OB2_GRID->SET_TABLE_FOR_FIRST_DISPLAY
      EXPORTING
          IS_LAYOUT                       = WA_LAYO
@@ -189,7 +188,7 @@ FORM DISPLAYVBAK .
 
 ENDFORM.                    " DISPLAYVBAK
 "----------------------------------------------------------------------------------------------------------------------------------------------------------
-FORM FLDCATVBAK .
+FORM FLDCATVBAK . [15 ]
 * CALL FUNCTION MODULE
 
      CALL FUNCTION 'LVC_FIELDCATALOG_MERGE'
