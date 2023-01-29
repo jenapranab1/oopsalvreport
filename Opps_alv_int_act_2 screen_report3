@@ -69,27 +69,29 @@ CALL SCREEN 100.
 MODULE STATUS_0100 OUTPUT.
   IF OB1_CONT IS NOT BOUND.
   SET PF-STATUS 'STATUS100'.
+  
 * LINK CUSTOM CONTROL WITH CUSTOM CONTAINER.
   CREATE OBJECT OB1_CONT
     EXPORTING
       CONTAINER_NAME              =  'CUSTCTRL1'.
+      
 * LINK ALV GRID WITH CUSTOM CONTAINER.
     CREATE OBJECT OB1_GRID
       EXPORTING
         I_PARENT          =  OB1_CONT.
         ENDIF.
  ENDMODULE.                 " STATUS_0100  OUTPUT
- 
+"------------------------------------------------------------------------------------------------------------------------------
 * CUSTOMER DATA RETRIEVAL
     PERFORM GETKNA1.
-    "------------------------------------------------------------------------------------------------------------------------------
+   
     FORM GETKNA1 .
      SELECT KUNNR NAME1 LAND1
         FROM KNA1
           INTO TABLE IT_KNA1
             WHERE KUNNR IN CUST_NO.
     ENDFORM.                    " GETKNA1
-   "------------------------------------------------------------------------------------------------------------------------------
+"------------------------------------------------------------------------------------------------------------------------------
 
    IF IT_KNA1 IS NOT INITIAL.
    
@@ -121,9 +123,9 @@ MODULE USER_COMMAND_0100 INPUT.
             LEAVE PROGRAM.
     ENDCASE.
 ENDMODULE.                 " USER_COMMAND_0100  INPUT
-
+"------------------------------------------------------------------------------------------------------------------------------------  
 *For 2nd Screen VBAK .
-"------------------------------------------------------------------------------------------------------------------------------------                   
+                 
 FORM GETVBAK .
       REFRESH IT_VBAK.
         SELECT VBELN ERDAT ERZET ERNAM NETWR
@@ -146,19 +148,24 @@ ENDFORM.                    " GETVBAK
 MODULE STATUS_0200 OUTPUT.
   IF OB2_CONT IS NOT BOUND.
   SET PF-STATUS 'STATUS200'.
+  
 * LINK CONTAINER WITH CUSTOM CONTROL
      CREATE OBJECT OB2_CONT
        EXPORTING
          CONTAINER_NAME              = 'CUSTCTRL2'.
+         
 * LINK CONTAINER WITH GRID.
       CREATE OBJECT OB2_GRID
         EXPORTING
          I_PARENT          =  OB2_CONT.
+         
 * display the sales order data
          PERFORM DISPLAYVBAK.
       ELSE.
+      
 * cell styling
          PERFORM CELLSTYLING.
+         
 * REDISPLAY THE TABLE.
          CALL METHOD OB2_GRID->REFRESH_TABLE_DISPLAY.
 ENDIF.
@@ -184,9 +191,9 @@ ENDFORM.                    " DISPLAYVBAK
 "----------------------------------------------------------------------------------------------------------------------------------------------------------
 FORM FLDCATVBAK .
 * CALL FUNCTION MODULE
+
      CALL FUNCTION 'LVC_FIELDCATALOG_MERGE'
       EXPORTING
-
         I_STRUCTURE_NAME             =  'ZROHITVBAK'
        CHANGING
          CT_FIELDCAT                  = IT_FCAT.
