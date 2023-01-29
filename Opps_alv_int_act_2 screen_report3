@@ -74,6 +74,7 @@ CALL SCREEN 100.
 MODULE STATUS_0100 OUTPUT.
   IF OB1_CONT IS NOT BOUND.
   SET PF-STATUS 'STATUS100'. 
+  * Create Back Button & Custom Control Design in Layout [X] .
   
   MODULE USER_COMMAND_0100 INPUT. [ 2 ] 
     CASE SY-UCOMM.
@@ -108,13 +109,16 @@ ENDMODULE.                 " USER_COMMAND_0100  INPUT
 * REGISTER HANDLER FOR DOUBLE CLICK ON CUSTOMER DATA GRID. [  * DATA OB1 TYPE REF TO LCL_EVENTRECEIVER (already declareed ) ] 
  
    PERFORM REGISTERHANDLER.                        
+   
    FORM REGISTERHANDLER .
       CREATE OBJECT OB1.
       SET HANDLER OB1->HANDLE_DOUBLE_CLICK FOR OB1_GRID.
     ENDFORM.                  " REGISTERHANDLER
+    
 *---------------------------------------------------------------------------------------------------------------------------------
 * DISPLAY DATA KNA1.  [ 6 ]
      PERFORM DISPLAYKNA1.
+     
      FORM DISPLAYKNA1 .
      CALL METHOD OB1_GRID->SET_TABLE_FOR_FIRST_DISPLAY
         EXPORTING
