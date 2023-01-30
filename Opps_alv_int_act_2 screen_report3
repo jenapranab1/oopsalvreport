@@ -33,31 +33,31 @@ DATA WA_LAYO TYPE LVC_S_LAYO.
 DATA : IT_FCAT TYPE LVC_T_FCAT,
        WA_FCAT TYPE LVC_S_FCAT.
 "----------------------------------------------------------------------------------------------------------------------------------------------------     
-DATA OB1 TYPE REF TO LCL_EVENTRECEIVER.
+DATA OB1 TYPE REF TO LCL_EVENTRECEIVER. [ 7 ]
 "----------------------------------------------------------------------------------------------------------------------------------------------------
-CLASS LCL_EVENTRECEIVER DEFINITION. [7 ]
+CLASS LCL_EVENTRECEIVER DEFINITION. [9 ]
       PUBLIC SECTION.
          METHODS [HANDLE_DOUBLE_CLICK]  FOR EVENT [DOUBLE_CLICK] OF [ CL_GUI_ALV_GRID ]  IMPORTING [ E_ROW E_COLUMN ]. 
         [  " HANDLE_DOUBLE_CLICK is Method  , DOUBLE_CLICK is For Event , class --> CL_GUI_ALV_GRID  ]
 ENDCLASS.
 "------------------------------------------------------------------------------------------------------------------------------
-CLASS LCL_EVENTRECEIVER IMPLEMENTATION.  [ 8 ]
+CLASS LCL_EVENTRECEIVER IMPLEMENTATION.  [ 10 ]
        METHOD HANDLE_DOUBLE_CLICK.     " HANDLE_DOUBLE_CLICK is Method  
             CASE E_COLUMN-FIELDNAME.
              WHEN 'KUNNR'.
                   *   MESSAGE 'DOUBLE CLICKED ON CUSTOMER NO' TYPE 'I'. "EVENT DOUBLE_CLICK IS TRIGEERED.
 
-* GET SELECTED CUSTOMER NO.  [ 9 ] 
+* GET SELECTED CUSTOMER NO.  [ 11 ] 
            READ TABLE IT_KNA1 INTO WA_KNA1 INDEX E_ROW-INDEX TRANSPORTING KUNNR.
            IF SY-SUBRC EQ 0.
            
 * GET CORRESPONDING SALES ORDER DATA FOR SELECTED CUSTOMER NO. 
 *2nd screen 
-           PERFORM GETVBAK. [10 ] --> Select statement writen below 
+           PERFORM GETVBAK. [12 ] --> Select statement writen below 
            
           IF IT_FINAL_VBAK IS NOT INITIAL.
               
-          CALL SCREEN 200. [ 11 ]----> PBO & PAI WRIITEN BELOW 
+          CALL SCREEN 200. [ 13 ]----> PBO & PAI WRIITEN BELOW 
            ELSE.
               MESSAGE ' NO SALES ORDER DATA AVAILABLE FOR SELECTED CUSTOMER' TYPE 'I'.
           ENDIF.
@@ -129,7 +129,7 @@ ENDMODULE.                 " USER_COMMAND_0100  INPUT
      
    ENDIF.
 "------------------------------------------------------------------------------------------------------------------------------------  
-*For 2nd Screen VBAK .  [ 10 ]          
+*For 2nd Screen VBAK .  [ 12 ]          
  FORM GETVBAK .
       
       REFRESH IT_VBAK.
@@ -154,11 +154,11 @@ ENDMODULE.                 " USER_COMMAND_0100  INPUT
           ENDIF.
 ENDFORM.                    " GETVBAK
 "------------------------------------------------------------------------------------------------------------------------------
-MODULE STATUS_0200 OUTPUT.  [11 ]
+MODULE STATUS_0200 OUTPUT.  [13 ]
   IF OB2_CONT IS NOT BOUND.
   SET PF-STATUS 'STATUS200'.
   
-* LINK CONTAINER WITH CUSTOM CONTROL  [ 12 ] 
+* LINK CONTAINER WITH CUSTOM CONTROL  [ 13 ] 
      CREATE OBJECT OB2_CONT
        EXPORTING
          CONTAINER_NAME              = 'CUSTCTRL2'.
@@ -169,20 +169,20 @@ MODULE STATUS_0200 OUTPUT.  [11 ]
          I_PARENT          =  OB2_CONT.
          
 * display the sales order data
-         PERFORM DISPLAYVBAK.   [ 14 ] 
+         PERFORM DISPLAYVBAK.   [ 13 ] 
       ELSE.
 ENDIF.
 
 ENDMODULE.                 " STATUS_0200  OUTPUT
 "------------------------------------------------------------------------------------------------------------------------------
-MODULE USER_COMMAND_0200 INPUT. [11 ]
+MODULE USER_COMMAND_0200 INPUT. [13 ]
     CASE SY-UCOMM.
        WHEN 'BACK'.
          LEAVE TO SCREEN 100.
      ENDCASE.
 ENDMODULE.                 " USER_COMMAND_0200  INPUT
 "------------------------------------------------------------------------------------------------------------------------------
-FORM DISPLAYVBAK . [ 14 ] 
+FORM DISPLAYVBAK . [ 13 ] 
      CALL METHOD OB2_GRID->SET_TABLE_FOR_FIRST_DISPLAY
      EXPORTING
          IS_LAYOUT                       = WA_LAYO
@@ -192,7 +192,7 @@ FORM DISPLAYVBAK . [ 14 ]
 
 ENDFORM.                    " DISPLAYVBAK
 "----------------------------------------------------------------------------------------------------------------------------------------------------------
-FORM FLDCATVBAK . [15 ]
+FORM FLDCATVBAK . [14 ]
 * CALL FUNCTION MODULE
 
      CALL FUNCTION 'LVC_FIELDCATALOG_MERGE'
