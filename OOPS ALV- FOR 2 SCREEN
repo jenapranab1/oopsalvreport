@@ -72,16 +72,7 @@ ENDMODULE.                 " USER_COMMAND_0100  INPUT
     ENDFORM.                    " GETKNA1
     
      IF IT_KNA1 IS NOT INITIAL.
-"------------------------------------------------------------------------------------------------------------------------------
-* REGISTER HANDLER FOR DOUBLE CLICK ON CUSTOMER DATA GRID. [  * DATA OB1 TYPE REF TO LCL_EVENTRECEIVER (already declareed ) ] 
- 
-   PERFORM REGISTERHANDLER.                        
-   
-   FORM REGISTERHANDLER .
-      CREATE OBJECT OB1.
-      SET HANDLER OB1->HANDLE_DOUBLE_CLICK FOR OB1_GRID.
-    ENDFORM.                  " REGISTERHANDLER
-    
+
 *---------------------------------------------------------------------------------------------------------------------------------
 * DISPLAY DATA KNA1.  [ 6 ]
      PERFORM DISPLAYKNA1.
@@ -95,7 +86,17 @@ ENDMODULE.                 " USER_COMMAND_0100  INPUT
      ENDFORM.                             " DISPLAYKNA1
      
    ENDIF.
-   --------------------------------------------------------------------------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------
+* REGISTER HANDLER FOR DOUBLE CLICK ON CUSTOMER DATA GRID. [  * DATA OB1 TYPE REF TO LCL_EVENTRECEIVER (already declareed ) ] 
+ 
+   PERFORM REGISTERHANDLER.     [7]                   
+   
+   FORM REGISTERHANDLER .
+      CREATE OBJECT OB1.
+      SET HANDLER OB1->HANDLE_DOUBLE_CLICK FOR OB1_GRID.
+    ENDFORM.                  " REGISTERHANDLER
+ ---------------------------------------------------------------------------------------------------------------------------------------------------------
+    
 CLASS LCL_EVENTRECEIVER DEFINITION. [9 ]
       PUBLIC SECTION.
          METHODS [HANDLE_DOUBLE_CLICK]  FOR EVENT [DOUBLE_CLICK] OF [ CL_GUI_ALV_GRID ]  IMPORTING [ E_ROW E_COLUMN ]. 
@@ -111,10 +112,31 @@ CLASS LCL_EVENTRECEIVER IMPLEMENTATION.  [ 10 ]
 * GET SELECTED CUSTOMER NO.  [ 11 ] 
            READ TABLE IT_KNA1 INTO WA_KNA1 INDEX E_ROW-INDEX TRANSPORTING KUNNR.
            IF SY-SUBRC EQ 0.
-           
+"----------------------------------------------------------------------------------------------------------------------------------------------------------           
 * GET CORRESPONDING SALES ORDER DATA FOR SELECTED CUSTOMER NO. 
 *2nd screen 
            PERFORM GETVBAK. [12 ] --> Select statement writen below 
+           *For 2nd Screen VBAK .  [ 12 ]          
+ FORM GETVBAK .
+         SELECT VBELN ERDAT ERZET ERNAM NETWR
+           FROM VBAK INTO TABLE IT_VBAK
+             WHERE KUNNR = WA_KNA1-KUNNR.
+             
+          IF SY-SUBRC EQ 0.
+        REFRESH IT_VBAK 
+        REFRESH IT_FINAL_VBAK.
+          
+          LOOP AT IT_VBAK INTO WA_VBAK.
+            CLEAR WA_FINAL_VBAK.
+          WA_FINAL_VBAK-VBELN = WA_VBAK-VBELN.
+          WA_FINAL_VBAK-ERDAT = WA_VBAK-ERDAT.
+          WA_FINAL_VBAK-ERZET = WA_VBAK-ERZET.
+          WA_FINAL_VBAK-ERNAM = WA_VBAK-ERNAM.
+          WA_FINAL_VBAK-NETWR = WA_VBAK-NETWR.
+            APPEND WA_FINAL_VBAK TO IT_FINAL_VBAK.
+          ENDLOOP.
+          ENDIF.
+ENDFORM.                    " GETVBAK
            
           IF IT_FINAL_VBAK IS NOT INITIAL.
               
@@ -129,31 +151,6 @@ CLASS LCL_EVENTRECEIVER IMPLEMENTATION.  [ 10 ]
         ENDMETHOD.
   ENDCLASS.   
 "------------------------------------------------------------------------------------------------------------------------------------  
-*For 2nd Screen VBAK .  [ 12 ]          
- FORM GETVBAK .
-      
-      REFRESH IT_VBAK.
-         
-         SELECT VBELN ERDAT ERZET ERNAM NETWR
-           FROM VBAK INTO TABLE IT_VBAK
-             WHERE KUNNR = WA_KNA1-KUNNR.
-             
-          IF SY-SUBRC EQ 0.
-        
-        REFRESH IT_FINAL_VBAK.
-          
-          LOOP AT IT_VBAK INTO WA_VBAK.
-            CLEAR WA_FINAL_VBAK.
-          WA_FINAL_VBAK-VBELN = WA_VBAK-VBELN.
-          WA_FINAL_VBAK-ERDAT = WA_VBAK-ERDAT.
-          WA_FINAL_VBAK-ERZET = WA_VBAK-ERZET.
-          WA_FINAL_VBAK-ERNAM = WA_VBAK-ERNAM.
-          WA_FINAL_VBAK-NETWR = WA_VBAK-NETWR.
-            APPEND WA_FINAL_VBAK TO IT_FINAL_VBAK.
-          ENDLOOP.
-          ENDIF.
-ENDFORM.                    " GETVBAK
-"------------------------------------------------------------------------------------------------------------------------------
 MODULE STATUS_0200 OUTPUT.  [13 ]
   IF OB2_CONT IS NOT BOUND.
   SET PF-STATUS 'STATUS200'.
