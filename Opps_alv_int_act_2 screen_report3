@@ -2,11 +2,11 @@
 " For TWO Screeen From Selection screen Kunnar---> KNA1 (100 ) -->VBAK (200 ) 
 
 REPORT ZPRG_OOPS_ALVREPORT2.
-
+-------------------------------------------------------------------------------------------------------------------------------------------
 DATA V_KUNNR TYPE KNA1-KUNNR.
-
+--------------------------------------------------------------------------------------------------------------------------------------------
 SELECT-OPTIONS   CUST_NO FOR V_KUNNR DEFAULT '1000' TO '1030'.
-
+------------------------------------------------------------------------------------------------------------------------------------------
 DATA : OB1_CONT TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
        OB1_GRID TYPE REF TO CL_GUI_ALV_GRID,
        
@@ -33,8 +33,69 @@ DATA WA_LAYO TYPE LVC_S_LAYO.
 DATA : IT_FCAT TYPE LVC_T_FCAT,
        WA_FCAT TYPE LVC_S_FCAT.
 "----------------------------------------------------------------------------------------------------------------------------------------------------     
-DATA OB1 TYPE REF TO LCL_EVENTRECEIVER. [ 7 ]
+DATA OB1 TYPE REF TO LCL_EVENTRECEIVER. 
 "----------------------------------------------------------------------------------------------------------------------------------------------------
+START-OF-SELECTION. [ 1 ] 
+CALL SCREEN 100.
+
+MODULE STATUS_0100 OUTPUT.
+  IF OB1_CONT IS NOT BOUND.
+  SET PF-STATUS 'STATUS100'. 
+  * Create Back Button & Custom Control Design in Layout [X] .
+  --------------------------------------------------------------------------------------------------------------------------------------------------
+  MODULE USER_COMMAND_0100 INPUT. [ 2 ] 
+    CASE SY-UCOMM.
+        WHEN 'BACK'.
+            LEAVE PROGRAM.
+    ENDCASE.
+ENDMODULE.                 " USER_COMMAND_0100  INPUT
+  ------------------------------------------------------------------------------------------------------------------------------------------------------
+* LINK CUSTOM CONTROL WITH CUSTOM CONTAINER. [3]
+  CREATE OBJECT OB1_CONT
+    EXPORTING
+      CONTAINER_NAME              =  'CUSTCTRL1'.
+      
+* LINK ALV GRID WITH CUSTOM CONTAINER.  [4]
+    CREATE OBJECT OB1_GRID
+      EXPORTING
+        I_PARENT          =  OB1_CONT.
+        ENDIF.
+ ENDMODULE.                 " STATUS_0100  OUTPUT
+"------------------------------------------------------------------------------------------------------------------------------
+* CUSTOMER DATA RETRIEVAL      [5] 
+  [  PERFORM GETKNA1. ]
+    FORM GETKNA1 .
+     SELECT KUNNR NAME1 LAND1
+        FROM KNA1
+          INTO TABLE IT_KNA1
+            WHERE KUNNR IN CUST_NO.
+    ENDFORM.                    " GETKNA1
+    
+     IF IT_KNA1 IS NOT INITIAL.
+"------------------------------------------------------------------------------------------------------------------------------
+* REGISTER HANDLER FOR DOUBLE CLICK ON CUSTOMER DATA GRID. [  * DATA OB1 TYPE REF TO LCL_EVENTRECEIVER (already declareed ) ] 
+ 
+   PERFORM REGISTERHANDLER.                        
+   
+   FORM REGISTERHANDLER .
+      CREATE OBJECT OB1.
+      SET HANDLER OB1->HANDLE_DOUBLE_CLICK FOR OB1_GRID.
+    ENDFORM.                  " REGISTERHANDLER
+    
+*---------------------------------------------------------------------------------------------------------------------------------
+* DISPLAY DATA KNA1.  [ 6 ]
+     PERFORM DISPLAYKNA1.
+     
+     FORM DISPLAYKNA1 .
+     CALL METHOD OB1_GRID->SET_TABLE_FOR_FIRST_DISPLAY
+        EXPORTING
+            I_STRUCTURE_NAME            =  'ZROHITKNA1'
+        CHANGING
+          IT_OUTTAB                     =   IT_KNA1.
+     ENDFORM.                             " DISPLAYKNA1
+     
+   ENDIF.
+   --------------------------------------------------------------------------------------------------------------------------------------------------------
 CLASS LCL_EVENTRECEIVER DEFINITION. [9 ]
       PUBLIC SECTION.
          METHODS [HANDLE_DOUBLE_CLICK]  FOR EVENT [DOUBLE_CLICK] OF [ CL_GUI_ALV_GRID ]  IMPORTING [ E_ROW E_COLUMN ]. 
@@ -67,67 +128,6 @@ CLASS LCL_EVENTRECEIVER IMPLEMENTATION.  [ 10 ]
          ENDCASE.
         ENDMETHOD.
   ENDCLASS.   
-"------------------------------------------------------------------------------------------------------------------------------
-START-OF-SELECTION. [ 1 ] 
-CALL SCREEN 100.
-
-MODULE STATUS_0100 OUTPUT.
-  IF OB1_CONT IS NOT BOUND.
-  SET PF-STATUS 'STATUS100'. 
-  * Create Back Button & Custom Control Design in Layout [X] .
-  
-  MODULE USER_COMMAND_0100 INPUT. [ 2 ] 
-    CASE SY-UCOMM.
-        WHEN 'BACK'.
-            LEAVE PROGRAM.
-    ENDCASE.
-ENDMODULE.                 " USER_COMMAND_0100  INPUT
-  
-* LINK CUSTOM CONTROL WITH CUSTOM CONTAINER. [3]
-  CREATE OBJECT OB1_CONT
-    EXPORTING
-      CONTAINER_NAME              =  'CUSTCTRL1'.
-      
-* LINK ALV GRID WITH CUSTOM CONTAINER.  [4]
-    CREATE OBJECT OB1_GRID
-      EXPORTING
-        I_PARENT          =  OB1_CONT.
-        ENDIF.
- ENDMODULE.                 " STATUS_0100  OUTPUT
-"------------------------------------------------------------------------------------------------------------------------------
-* CUSTOMER DATA RETRIEVAL      [5] 
-    PERFORM GETKNA1.
-    FORM GETKNA1 .
-     SELECT KUNNR NAME1 LAND1
-        FROM KNA1
-          INTO TABLE IT_KNA1
-            WHERE KUNNR IN CUST_NO.
-    ENDFORM.                    " GETKNA1
-    
-     IF IT_KNA1 IS NOT INITIAL.
-"------------------------------------------------------------------------------------------------------------------------------
-* REGISTER HANDLER FOR DOUBLE CLICK ON CUSTOMER DATA GRID. [  * DATA OB1 TYPE REF TO LCL_EVENTRECEIVER (already declareed ) ] 
- 
-   PERFORM REGISTERHANDLER.                        
-   
-   FORM REGISTERHANDLER .
-      CREATE OBJECT OB1.
-      SET HANDLER OB1->HANDLE_DOUBLE_CLICK FOR OB1_GRID.
-    ENDFORM.                  " REGISTERHANDLER
-    
-*---------------------------------------------------------------------------------------------------------------------------------
-* DISPLAY DATA KNA1.  [ 6 ]
-     PERFORM DISPLAYKNA1.
-     
-     FORM DISPLAYKNA1 .
-     CALL METHOD OB1_GRID->SET_TABLE_FOR_FIRST_DISPLAY
-        EXPORTING
-            I_STRUCTURE_NAME            =  'ZROHITKNA1'
-        CHANGING
-          IT_OUTTAB                     =   IT_KNA1.
-     ENDFORM.                             " DISPLAYKNA1
-     
-   ENDIF.
 "------------------------------------------------------------------------------------------------------------------------------------  
 *For 2nd Screen VBAK .  [ 12 ]          
  FORM GETVBAK .
